@@ -1,0 +1,77 @@
+class BlocksWorld:
+    def __init__(self):
+        self.state = {
+            "A": "B",  # A is on B
+            "B": "table",  # B is on table
+            "C": "table"  # C is on table
+        }
+        self.goal = {
+            "A": "B",
+            "B": "C",
+            "C": "table"
+        }
+
+    def is_goal_state(self):
+        return self.state == self.goal
+
+    def move(self, block, destination):
+        # Check if the block is clear before moving
+        if self.is_clear(block):
+            # Check if the destination is clear before moving
+            if destination == "table" or self.is_clear(destination):
+                print(f"Moving {block} from {self.state[block]} to {destination}")
+                self.state[block] = destination
+                return True  # Move was successful
+            else:
+                print(f"Cannot move {block} to {destination}: {destination} is not clear")
+                return False  # Move failed
+        else:
+            print(f"Cannot move {block}: {block} is not clear")
+            return False  # Move failed
+
+    def is_clear(self, block):
+        # A block is clear if no other block is on top of it
+        for b, on in self.state.items():
+            if on == block:
+                return False  # Another block is on top of this block
+        return True  # No block is on top of this block
+
+    def plan_moves(self):
+        print("\nInitial State:", self.state)
+        moves = []  # Store the sequence of moves
+
+        while not self.is_goal_state():
+            for block, target in self.goal.items():
+                if self.state[block] != target:
+                    # If the block is not in the correct position, try to move it
+                    if self.move(block, target):
+                        moves.append((block, target))  # Record the move
+                        break  # After a successful move, restart the loop
+                    else:
+                        # If the move failed, we need to clear the way
+                        # Find a block that is blocking the move
+                        blocking_block = None
+                        for b, on in self.state.items():
+                            if on == target and not self.is_clear(target):
+                                blocking_block = b
+                                break
+
+                        if blocking_block:
+                            # Move the blocking block to the table
+                            if self.move(blocking_block, "table"):
+                                moves.append((blocking_block, "table"))
+                                break  # Restart the loop after moving the blocking block
+                        else:
+                            # If no blocking block is found, there might be a cycle
+                            print("Cannot find a solution: Possible cycle detected.")
+                            return  # Exit if a solution cannot be found
+
+        print("\nFinal Goal State Reached:", self.state)
+        print("\nPlan of Moves:")
+        for move in moves:
+            print(f"Move {move[0]} to {move[1]}")
+
+
+# Run the Blocks World Solver
+bw = BlocksWorld()
+bw.plan_moves()
